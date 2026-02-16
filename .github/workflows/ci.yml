@@ -18,3 +18,28 @@ jobs:
 
       - name: Build Step
         run: echo "Build Successful!"
+
+      - name: Send Slack Notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            STATUS="SUCCESS ✅"
+            COLOR="#36a64f"
+          else
+            STATUS="FAILED ❌"
+            COLOR="#ff0000"
+          fi
+
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{
+            \"attachments\": [
+              {
+                \"color\": \"${COLOR}\",
+                \"title\": \"GitHub Actions CI Pipeline\",
+                \"text\": \"Build Status: ${STATUS}\",
+                \"footer\": \"Repository: ${{ github.repository }}\",
+                \"ts\": $(date +%s)
+              }
+            ]
+          }" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
